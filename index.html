@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Đấu Trường Giả Kim: Giải Mã Lực Liên Kết Phân Tử - Hóa 10 Lớp Chọn</title>
+  <!-- Google Fonts: Nunito & Space Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Nunito', 'sans-serif'],
+            display: ['Space Grotesk', 'Nunito', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Thiết lập chuẩn chống tràn ngang và bảo vệ hiển thị toàn vẹn từng ký tự */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      overflow-x: hidden;
+      background: linear-gradient(155deg, #0F172A 0%, #1E1B4B 48%, #0F292E 100%);
+      color: #1E293B;
+      font-family: 'Nunito', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Đảm bảo text không bao giờ bị cắt mất chữ hay tràn khung */
+    p, span, div, button, h1, h2, h3, h4, label {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: normal;
+      white-space: normal;
+    }
+
+    /* Tinh chỉnh chỉ số dưới và mũ hóa học không làm lệch hay cắt dòng */
+    sub, sup {
+      font-size: 73%;
+      line-height: 0;
+      position: relative;
+      vertical-align: baseline;
+    }
+    sup { top: -0.45em; }
+    sub { bottom: -0.22em; }
+
+    /* Hiệu ứng hoạt ảnh mượt mà */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    .animate-float {
+      animation: floatSlow 3.2s ease-in-out infinite;
+    }
+
+    @keyframes slideUpFade {
+      0% { opacity: 0; transform: translateY(14px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-card {
+      animation: slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes pulseRing {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.45); }
+      50% { box-shadow: 0 0 0 7px rgba(99, 102, 241, 0); }
+    }
+    .active-slot-ring {
+      animation: pulseRing 1.8s infinite;
+    }
+
+    /* Nút bấm tối ưu thao tác chạm trên điện thoại */
+    .touch-target {
+      min-height: 48px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.14s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .touch-target:active:not(:disabled) {
+      transform: scale(0.985);
+    }
+
+    /* SVG co giãn 100% chiều rộng khung chứa, không bao giờ mất hình */
+    .responsive-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Canvas pháo hoa chúc mừng */
+    #celebration-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Khung Chứng Nhận Giả Kim */
+    .alchemy-cert {
+      background: linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 55%, #EEF2FF 100%);
+      border: 3px solid #6366F1;
+      box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.35), 0 0 0 6px rgba(99, 102, 241, 0.15);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Canvas pháo hoa toàn màn hình -->
+  <canvas id="celebration-canvas"></canvas>
+
+  <!-- Khung chứa chính chuẩn Mobile-First (max-width: 560px) -->
+  <div class="w-full max-w-[560px] mx-auto px-3 sm:px-4 py-3 sm:py-5 flex-grow flex flex-col">
+
+    <!-- THANH TRẠNG THÁI & TIẾN ĐỘ (Ẩn ở màn hình chào) -->
+    <header id="top-hud" class="hidden bg-slate-900/90 backdrop-blur-md text-white rounded-2xl p-3.5 mb-4 border border-indigo-400/30 shadow-xl sticky top-2 z-40">
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-lg shadow flex-shrink-0">
+            ⚗️
+          </div>
+          <div class="leading-tight min-w-0">
+            <div id="hud-name" class="font-extrabold text-sm sm:text-base text-white">Nhà Giả Kim</div>
+            <div id="hud-class" class="text-xs font-bold text-cyan-300">Lớp 10</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button id="btn-sound" onclick="toggleAudio()" aria-label="Bật hoặc tắt âm thanh"
+            class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-lg transition active:scale-95">
+            🔊
+          </button>
+          <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 px-3 py-1.5 rounded-xl font-black flex items-center gap-1 shadow">
+            <span class="text-sm">⚡</span>
+            <span id="hud-score" class="text-base sm:text-lg">0</span>
+            <span class="text-xs opacity-90">/100đ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thanh tiến độ 6 thử thách -->
+      <div>
+        <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+          <span id="hud-stage-title" class="text-indigo-200">Thử thách 1/6</span>
+          <span id="hud-progress-text" class="text-cyan-300">0%</span>
+        </div>
+        <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
+          <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-amber-400 rounded-full transition-all duration-500" style="width: 8%;"></div>
+        </div>
+        <!-- 6 viên ngọc tiến trình -->
+        <div class="grid grid-cols-6 gap-1.5 mt-2">
+          <div id="gem-1" class="h-1.5 rounded-full bg-amber-400 transition-all"></div>
+          <div id="gem-2" class="h-1.5 rounded-full bg-slate-700 transition-all"></div>
+          <div id="gem-3" class="h-1.5 rounded-full bg-slate-700 transition-all"></div>
+          <div id="gem-4" class="h-1.5 rounded-full bg-slate-700 transition-all"></div>
+          <div id="gem-5" class="h-1.5 rounded-full bg-slate-700 transition-all"></div>
+          <div id="gem-6" class="h-1.5 rounded-full bg-slate-700 transition-all"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- KHU VỰC NỘI DUNG CHÍNH -->
+    <main id="screen-container" class="flex-grow flex flex-col justify-center">
+      <!-- Render tự động bằng JS -->
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-xs text-slate-400 mt-5 pb-2 font-semibold">
+      Hóa học 10 (Kết nối tri thức) • Chuyên đề Nâng cao Lớp Chọn
+    </footer>
+  </div>
+
+  <!-- TOAST THÔNG BÁO (THAY THẾ HOÀN TOÀN ALERT) -->
+  <div id="toast-wrapper" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden w-[92%] max-w-[480px]">
+    <div class="bg-slate-900/95 text-white px-4 py-3.5 rounded-2xl shadow-2xl border border-indigo-400/50 flex items-center gap-3 backdrop-blur-md">
+      <span id="toast-icon" class="text-xl flex-shrink-0">💡</span>
+      <p id="toast-text" class="text-sm font-bold leading-snug"></p>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. HỆ THỐNG ÂM THANH TỔNG HỢP WEB AUDIO API (KHÔNG DÙNG FILE NGOÀI)
+       ========================================================================= */
+    let isSoundOn = true;
+    let audioContext = null;
+
+    function ensureAudioContext() {
+      if (!audioContext) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioContext = new Ctx();
+      }
+      if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    function toggleAudio() {
+      isSoundOn = !isSoundOn;
+      const btn = document.getElementById('btn-sound');
+      if (btn) btn.textContent = isSoundOn ? '🔊' : '🔇';
+      if (isSoundOn) {
+        ensureAudioContext();
+        playNote(660, 'sine', 0.1, 0.16, 0);
+      }
+    }
+
+    function playNote(freq, waveType, duration, gainVal = 0.2, delaySec = 0) {
+      if (!isSoundOn) return;
+      try {
+        ensureAudioContext();
+        if (!audioContext) return;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = waveType;
+        osc.frequency.setValueAtTime(freq, audioContext.currentTime + delaySec);
+        gain.gain.setValueAtTime(gainVal, audioContext.currentTime + delaySec);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + delaySec + duration);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start(audioContext.currentTime + delaySec);
+        osc.stop(audioContext.currentTime + delaySec + duration);
+      } catch (err) {}
+    }
+
+    function sfxClick() {
+      playNote(520, 'sine', 0.06, 0.1, 0);
+    }
+
+    function sfxSuccess() {
+      playNote(523.25, 'triangle', 0.14, 0.22, 0);
+      playNote(659.25, 'triangle', 0.14, 0.22, 0.09);
+      playNote(783.99, 'triangle', 0.26, 0.25, 0.18);
+    }
+
+    function sfxError() {
+      playNote(240, 'sawtooth', 0.18, 0.15, 0);
+      playNote(195, 'sawtooth', 0.25, 0.15, 0.14);
+    }
+
+    function sfxVictory() {
+      const seq = [523.25, 659.25, 783.99, 1046.5, 880, 1046.5];
+      const times = [0, 0.11, 0.22, 0.34, 0.50, 0.64];
+      seq.forEach((f, i) => playNote(f, 'triangle', 0.3, 0.25, times[i]));
+    }
+
+    /* =========================================================================
+       2. HỆ THỐNG THÔNG BÁO TOAST (KHÔNG DÙNG ALERT)
+       ========================================================================= */
+    let toastTimeout = null;
+    function showToast(msg, icon = '⚡') {
+      const wrapper = document.getElementById('toast-wrapper');
+      document.getElementById('toast-text').innerHTML = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      wrapper.classList.remove('hidden');
+      wrapper.classList.add('animate-card');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        wrapper.classList.add('hidden');
+      }, 3200);
+    }
+
+    /* =========================================================================
+       3. ĐỒ HỌA VECTOR SVG MINH HỌA PHÂN TỬ SẮC NÉT (100% RESPONSIVE)
+       ========================================================================= */
+    const SVG_ILLUSTRATIONS = {
+      // SVG 1: Cấu trúc mạng tinh thể nước đá (tứ diện rỗng) vs nước lỏng ở 4°C
+      iceVsWater: `
+        <svg viewBox="0 0 460 190" class="responsive-svg rounded-2xl bg-slate-900 border border-sky-500/30 p-2" role="img" aria-label="So sánh cấu trúc nước đá và nước lỏng">
+          <!-- Nền chia 2 khu vực -->
+          <rect x="8" y="8" width="216" height="174" rx="14" fill="#0C4A6E" fill-opacity="0.45" stroke="#38BDF8" stroke-width="1.2"/>
+          <rect x="236" y="8" width="216" height="174" rx="14" fill="#1E1B4B" fill-opacity="0.55" stroke="#818CF8" stroke-width="1.2"/>
+
+          <!-- Tiêu đề 2 khung -->
+          <text x="116" y="28" fill="#7DD3FC" font-size="12" font-weight="800" text-anchor="middle">NƯỚC ĐÁ (0°C) - CẤU TRÚC RỖNG</text>
+          <text x="344" y="28" fill="#A5B4FC" font-size="12" font-weight="800" text-anchor="middle">NƯỚC LỎNG (4°C) - XẾP KHÍT NHẤT</text>
+
+          <!-- BÊN TRÁI: Mạng lục giác rỗng của nước đá -->
+          <polygon points="116,46 164,72 164,122 116,148 68,122 68,72" fill="none" stroke="#38BDF8" stroke-width="2" stroke-dasharray="5,4"/>
+          <text x="116" y="101" fill="#BAE6FD" font-size="11" font-weight="700" text-anchor="middle">Khoảng trống</text>
+          <text x="116" y="114" fill="#BAE6FD" font-size="10" font-weight="600" text-anchor="middle">lớn (d = 0,92)</text>
+          <!-- 6 phân tử H2O tại 6 đỉnh lục giác -->
+          <circle cx="116" cy="46" r="9" fill="#EF4444"/><circle cx="107" cy="40" r="4.5" fill="#F8FAFC"/><circle cx="125" cy="40" r="4.5" fill="#F8FAFC"/>
+          <circle cx="164" cy="72" r="9" fill="#EF4444"/><circle cx="173" cy="66" r="4.5" fill="#F8FAFC"/><circle cx="156" cy="65" r="4.5" fill="#F8FAFC"/>
+          <circle cx="164" cy="122" r="9" fill="#EF4444"/><circle cx="173" cy="128" r="4.5" fill="#F8FAFC"/><circle cx="155" cy="128" r="4.5" fill="#F8FAFC"/>
+          <circle cx="116" cy="148" r="9" fill="#EF4444"/><circle cx="107" cy="154" r="4.5" fill="#F8FAFC"/><circle cx="125" cy="154" r="4.5" fill="#F8FAFC"/>
+          <circle cx="68" cy="122" r="9" fill="#EF4444"/><circle cx="59" cy="128" r="4.5" fill="#F8FAFC"/><circle cx="77" cy="128" r="4.5" fill="#F8FAFC"/>
+          <circle cx="68" cy="72" r="9" fill="#EF4444"/><circle cx="59" cy="66" r="4.5" fill="#F8FAFC"/><circle cx="77" cy="66" r="4.5" fill="#F8FAFC"/>
+          <text x="116" y="173" fill="#E0F2FE" font-size="10.5" font-weight="700" text-anchor="middle">V tăng → Khối lượng riêng nhỏ</text>
+
+          <!-- BÊN PHẢI: Các phân tử H2O linh động chen vào khoảng trống ở 4°C -->
+          <line x1="295" y1="68" x2="344" y2="85" stroke="#818CF8" stroke-width="1.8" stroke-dasharray="3,3"/>
+          <line x1="344" y1="85" x2="392" y2="66" stroke="#818CF8" stroke-width="1.8" stroke-dasharray="3,3"/>
+          <line x1="344" y1="85" x2="335" y2="132" stroke="#818CF8" stroke-width="1.8" stroke-dasharray="3,3"/>
+          <line x1="295" y1="125" x2="335" y2="132" stroke="#818CF8" stroke-width="1.8" stroke-dasharray="3,3"/>
+          <line x1="335" y1="132" x2="386" y2="124" stroke="#818CF8" stroke-width="1.8" stroke-dasharray="3,3"/>
+
+          <!-- Các cụm H2O xếp dày đặc -->
+          <circle cx="295" cy="68" r="9" fill="#EF4444"/><circle cx="287" cy="62" r="4.5" fill="#F8FAFC"/><circle cx="303" cy="62" r="4.5" fill="#F8FAFC"/>
+          <circle cx="344" cy="85" r="9" fill="#EF4444"/><circle cx="336" cy="79" r="4.5" fill="#F8FAFC"/><circle cx="352" cy="79" r="4.5" fill="#F8FAFC"/>
+          <circle cx="392" cy="66" r="9" fill="#EF4444"/><circle cx="384" cy="60" r="4.5" fill="#F8FAFC"/><circle cx="400" cy="60" r="4.5" fill="#F8FAFC"/>
+          <circle cx="295" cy="125" r="9" fill="#EF4444"/><circle cx="287" cy="119" r="4.5" fill="#F8FAFC"/><circle cx="303" cy="119" r="4.5" fill="#F8FAFC"/>
+          <circle cx="335" cy="132" r="9" fill="#EF4444"/><circle cx="327" cy="126" r="4.5" fill="#F8FAFC"/><circle cx="343" cy="126" r="4.5" fill="#F8FAFC"/>
+          <circle cx="386" cy="124" r="9" fill="#EF4444"/><circle cx="378" cy="118" r="4.5" fill="#F8FAFC"/><circle cx="394" cy="118" r="4.5" fill="#F8FAFC"/>
+          <circle cx="364" cy="105" r="8.5" fill="#EF4444"/><circle cx="357" cy="100" r="4" fill="#F8FAFC"/><circle cx="371" cy="100" r="4" fill="#F8FAFC"/>
+          <text x="344" y="173" fill="#C7D2FE" font-size="10.5" font-weight="700" text-anchor="middle">Mật độ cực đại (d = 1,00 g/cm³)</text>
+        </svg>
+      `,
+
+      // SVG 2: Đồng phân ortho-nitrophenol (nội phân tử) vs para-nitrophenol (liên phân tử)
+      nitrophenolIsomers: `
+        <svg viewBox="0 0 460 195" class="responsive-svg rounded-2xl bg-slate-900 border border-amber-500/30 p-2" role="img" aria-label="So sánh o-nitrophenol và p-nitrophenol">
+          <rect x="8" y="8" width="216" height="179" rx="14" fill="#451A03" fill-opacity="0.45" stroke="#F59E0B" stroke-width="1.2"/>
+          <rect x="236" y="8" width="216" height="179" rx="14" fill="#064E3B" fill-opacity="0.45" stroke="#10B981" stroke-width="1.2"/>
+
+          <text x="116" y="27" fill="#FCD34D" font-size="12" font-weight="800" text-anchor="middle">ortho-NITROPHENOL</text>
+          <text x="344" y="27" fill="#6EE7B7" font-size="12" font-weight="800" text-anchor="middle">para-NITROPHENOL</text>
+
+          <!-- Vòng benzen bên trái (o-nitrophenol) -->
+          <polygon points="82,66 110,82 110,114 82,130 54,114 54,82" fill="none" stroke="#F8FAFC" stroke-width="2"/>
+          <circle cx="82" cy="98" r="14" fill="none" stroke="#F8FAFC" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <!-- Nhóm -OH ở đỉnh trên -->
+          <line x1="82" y1="66" x2="82" y2="48" stroke="#F8FAFC" stroke-width="2"/>
+          <text x="82" y="44" fill="#F87171" font-size="12" font-weight="900" text-anchor="middle">O</text>
+          <line x1="90" y1="42" x2="112" y2="42" stroke="#F8FAFC" stroke-width="2"/>
+          <text x="120" y="46" fill="#38BDF8" font-size="12" font-weight="900" text-anchor="middle">H</text>
+          <!-- Nhóm -NO2 ở vị trí ortho -->
+          <line x1="110" y1="82" x2="134" y2="74" stroke="#F8FAFC" stroke-width="2"/>
+          <text x="145" y="78" fill="#A78BFA" font-size="12" font-weight="900" text-anchor="middle">N</text>
+          <line x1="145" y1="66" x2="145" y2="51" stroke="#F8FAFC" stroke-width="2"/>
+          <text x="145" y="47" fill="#F87171" font-size="12" font-weight="900" text-anchor="middle">O</text>
+          <line x1="154" y1="77" x2="174" y2="85" stroke="#F8FAFC" stroke-width="2"/>
+          <text x="183" y="90" fill="#F87171" font-size="12" font-weight="900" text-anchor="middle">O</text>
+          <!-- Liên kết H nội phân tử khép vòng 6 cạnh -->
+          <line x1="127" y1="43" x2="139" y2="43" stroke="#FBBF24" stroke-width="2.5" stroke-dasharray="3,2"/>
+          <text x="116" y="154" fill="#FDE68A" font-size="11" font-weight="800" text-anchor="middle">Liên kết H NỘI phân tử</text>
+          <text x="116" y="170" fill="#FEF3C7" font-size="10.5" font-weight="600" text-anchor="middle">(Khép vòng → Dễ bay hơi)</text>
+
+          <!-- Bên phải: 2 phân tử p-nitrophenol nối liên phân tử -->
+          <!-- Phân tử 1 -->
+          <polygon points="278,66 300,79 300,105 278,118 256,105 256,79" fill="none" stroke="#F8FAFC" stroke-width="1.8"/>
+          <text x="278" y="54" fill="#F87171" font-size="11" font-weight="900" text-anchor="middle">HO</text>
+          <text x="278" y="133" fill="#A78BFA" font-size="11" font-weight="900" text-anchor="middle">NO<tspan dy="3" font-size="8">2</tspan></text>
+          <!-- Liên kết H liên phân tử giữa 2 phân tử -->
+          <line x1="295" y1="129" x2="345" y2="75" stroke="#34D399" stroke-width="2.5" stroke-dasharray="4,3"/>
+          <!-- Phân tử 2 -->
+          <polygon points="384,76 406,89 406,115 384,128 362,115 362,89" fill="none" stroke="#F8FAFC" stroke-width="1.8"/>
+          <text x="364" y="68" fill="#38BDF8" font-size="11" font-weight="900" text-anchor="middle">H–O</text>
+          <text x="384" y="142" fill="#A78BFA" font-size="11" font-weight="900" text-anchor="middle">NO<tspan dy="3" font-size="8">2</tspan></text>
+
+          <text x="344" y="159" fill="#6EE7B7" font-size="11" font-weight="800" text-anchor="middle">Liên kết H LIÊN phân tử</text>
+          <text x="344" y="174" fill="#D1FAE5" font-size="10.5" font-weight="600" text-anchor="middle">(Kéo nhiều phân tử → Khó sôi)</text>
+        </svg>
+      `
+    };
+
+    /* =========================================================================
+       4. DỮ LIỆU KHOA HỌC 6 THỬ THÁCH CHUYÊN SÂU (TỔNG 100 ĐIỂM)
+       ========================================================================= */
+    const STAGES_META = [
+      { id: 1, name: 'Bí Ẩn Đại Dương Băng', points: 15, badge: 'Thử thách 1 • 15đ', gradient: 'from-sky-600 to-cyan-600' },
+      { id: 2, name: 'Đấu Trường Đồng Phân (HSG)', points: 20, badge: 'Thử thách 2 • 20đ', gradient: 'from-amber-600 to-orange-600' },
+      { id: 3, name: 'Thang Nhiệt Độ Sôi', points: 15, badge: 'Thử thách 3 • 15đ', gradient: 'from-rose-600 to-pink-600' },
+      { id: 4, name: 'Lực Khuếch Tán London', points: 20, badge: 'Thử thách 4 • 20đ', gradient: 'from-indigo-600 to-violet-600' },
+      { id: 5, name: 'Kết Nối Kỳ Quan Tự Nhiên', points: 15, badge: 'Thử thách 5 • 15đ', gradient: 'from-emerald-600 to-teal-600' },
+      { id: 6, name: 'Rương Tri Thức Giả Kim', points: 15, badge: 'Thử thách 6 • 15đ', gradient: 'from-purple-600 to-fuchsia-600' }
+    ];
+
+    /* =========================================================================
+       5. TRẠNG THÁI TRÒ CHƠI (STATE)
+       ========================================================================= */
+    let state = {
+      view: 'welcome', // 'welcome' | 'stage' | 'certificate'
+      playerName: '',
+      playerClass: '',
+      stageIndex: 1, // 1..6
+      scores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+      answers: {
+        s1: null,
+        s2: null,
+        s3Order: [], // ['C3H8', 'CH3OCH3', 'C2H5OH', 'CH3COOH']
+        s4: { a: null, b: null, c: null, d: null },
+        s5Matches: {}, // { leftId: rightId }
+        s6Blanks: [null, null, null]
+      },
+      submitted: {
+        1: false, 2: false, 3: false, 4: false, 5: false, 6: false
+      },
+      s5SelectedLeft: null,
+      s6ActiveSlot: 0
+    };
+
+    function getTotalScore() {
+      return Object.values(state.scores).reduce((acc, v) => acc + v, 0);
+    }
+
+    /* =========================================================================
+       6. CẬP NHẬT THANH HUD TRÊN CÙNG
+       ========================================================================= */
+    function updateHUD() {
+      const hud = document.getElementById('top-hud');
+      if (state.view === 'welcome') {
+        hud.classList.add('hidden');
+        return;
+      }
+      hud.classList.remove('hidden');
+
+      document.getElementById('hud-name').textContent = state.playerName || 'Nhà Giả Kim';
+      document.getElementById('hud-class').textContent = state.playerClass ? `Lớp ${state.playerClass} • Hệ Lớp Chọn` : 'Hóa học 10';
+      document.getElementById('hud-score').textContent = getTotalScore();
+
+      if (state.view === 'certificate') {
+        document.getElementById('hud-stage-title').textContent = '🏆 Hoàn thành xuất sắc 6/6 Thử thách!';
+        document.getElementById('hud-progress-text').textContent = '100%';
+        document.getElementById('hud-progress-bar').style.width = '100%';
+      } else {
+        const meta = STAGES_META[state.stageIndex - 1];
+        document.getElementById('hud-stage-title').textContent = `Chặng ${state.stageIndex}/6: ${meta.name}`;
+        const pct = Math.round(((state.stageIndex - 1) / 6) * 100 + 8);
+        document.getElementById('hud-progress-text').textContent = `${pct}%`;
+        document.getElementById('hud-progress-bar').style.width = `${pct}%`;
+      }
+
+      for (let i = 1; i <= 6; i++) {
+        const gem = document.getElementById(`gem-${i}`);
+        if (state.view === 'certificate' || i < state.stageIndex) {
+          gem.className = 'h-2 rounded-full bg-emerald-400 shadow-sm transition-all';
+        } else if (i === state.stageIndex) {
+          gem.className = 'h-2 rounded-full bg-amber-400 shadow-sm transition-all';
+        } else {
+          gem.className = 'h-1.5 rounded-full bg-slate-700 transition-all';
+        }
+      }
+    }
+
+    /* =========================================================================
+       7. MÀN HÌNH CHÀO MỪNG (NHẬP THÔNG TIN HỌC SINH)
+       ========================================================================= */
+    function renderWelcome() {
+      const container = document.getElementById('screen-container');
+      container.innerHTML = `
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-2xl border border-indigo-200 animate-card">
+          <div class="text-center mb-5">
+            <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-xs sm:text-sm mb-3 border border-indigo-200">
+              <span>⚗️</span> HÓA HỌC 10 • DÀNH CHO LỚP CHỌN & BỒI DƯỠNG HSG
+            </div>
+
+            <div class="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-cyan-500 flex items-center justify-center shadow-lg mb-4 animate-float">
+              <span class="text-5xl">⚛️</span>
+            </div>
+
+            <h1 class="font-display font-black text-2xl sm:text-3xl text-slate-900 leading-tight mb-2">
+              ĐẤU TRƯỜNG GIẢ KIM:<br/>
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600">
+                GIẢI MÃ LỰC LIÊN KẾT PHÂN TỬ
+              </span>
+            </h1>
+
+            <p class="text-slate-600 text-sm sm:text-base font-semibold leading-relaxed">
+              Chinh phục 6 thử thách thực tế & chuyên sâu về <strong>Liên kết Hydrogen</strong> và <strong>Tương tác Van der Waals</strong> để mở khóa danh hiệu <em>Bậc Thầy Vi Mô</em> (tối đa <strong>100 điểm</strong>).
+            </p>
+          </div>
+
+          <!-- Lộ trình 6 thử thách -->
+          <div class="bg-slate-50 rounded-2xl p-3.5 mb-5 border border-slate-200">
+            <div class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2.5 flex items-center gap-1.5">
+              <span>🧭</span> Bản đồ 6 Thử Thách Giả Kim
+            </div>
+            <div class="grid grid-cols-1 gap-2 text-xs sm:text-sm font-bold text-slate-700">
+              <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-100">
+                <span>❄️ 1. Bí ẩn nước đá & Mật độ cực đại ở 4°C</span>
+                <span class="text-indigo-600 font-black">15đ</span>
+              </div>
+              <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-100">
+                <span>🔥 2. Đấu trường đồng phân ortho- & para-nitrophenol</span>
+                <span class="text-amber-600 font-black">20đ</span>
+              </div>
+              <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-100">
+                <span>🌡️ 3. Thang nhiệt độ sôi & Dimer carboxylic acid</span>
+                <span class="text-rose-600 font-black">15đ</span>
+              </div>
+              <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-100">
+                <span>🧪 4. Lực khuếch tán London ở Halogen & Khí hiếm</span>
+                <span class="text-purple-600 font-black">20đ</span>
+              </div>
+              <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-100">
+                <span>🦎 5. Kết nối kỳ quan: Nhện nước, Tắc kè & DNA</span>
+                <span class="text-emerald-600 font-black">15đ</span>
+              </div>
+              <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-100">
+                <span>🔐 6. Rương Tri Thức Giả Kim (Mật mã tổng hợp)</span>
+                <span class="text-cyan-600 font-black">15đ</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form nhập Họ tên & Lớp -->
+          <form onsubmit="handleStartGame(event)" class="space-y-3.5">
+            <div>
+              <label for="player-name-input" class="block text-sm font-extrabold text-slate-800 mb-1.5">
+                ✍️ Họ và tên Học sinh <span class="text-rose-500">*</span>
+              </label>
+              <input id="player-name-input" type="text" required placeholder="Nhập họ và tên đầy đủ của bạn..."
+                value="${escapeHTML(state.playerName)}"
+                class="w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none text-base font-bold text-slate-900 bg-white transition" />
+            </div>
+
+            <div>
+              <label for="player-class-input" class="block text-sm font-extrabold text-slate-800 mb-1.5">
+                🏫 Lớp học <span class="text-rose-500">*</span>
+              </label>
+              <input id="player-class-input" type="text" required placeholder="Ví dụ: 10A2 (Chuyên Hóa)"
+                value="${escapeHTML(state.playerClass)}"
+                class="w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none text-base font-bold text-slate-900 bg-white transition" />
+            </div>
+
+            <button type="submit"
+              class="touch-target w-full mt-2 py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 text-white font-black text-base sm:text-lg shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">
+              <span>⚡ BƯỚC VÀO ĐẤU TRƯỜNG GIẢ KIM</span>
+            </button>
+          </form>
+        </div>
+      `;
+    }
+
+    function handleStartGame(e) {
+      e.preventDefault();
+      const name = document.getElementById('player-name-input').value.trim();
+      const cls = document.getElementById('player-class-input').value.trim();
+      if (!name || !cls) {
+        showToast('Vui lòng điền đầy đủ Họ tên và Lớp học để in trên Chứng nhận nhé!', '📝');
+        return;
+      }
+      ensureAudioContext();
+      sfxSuccess();
+      state.playerName = name;
+      state.playerClass = cls;
+      state.view = 'stage';
+      state.stageIndex = 1;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =========================================================================
+       8. RENDER TỪNG THỬ THÁCH (1 ĐẾN 6)
+       ========================================================================= */
+    function renderStage() {
+      const idx = state.stageIndex;
+      const meta = STAGES_META[idx - 1];
+      const isDone = state.submitted[idx];
+      let bodyHTML = '';
+
+      if (idx === 1) bodyHTML = buildStage1();
+      if (idx === 2) bodyHTML = buildStage2();
+      if (idx === 3) bodyHTML = buildStage3();
+      if (idx === 4) bodyHTML = buildStage4();
+      if (idx === 5) bodyHTML = buildStage5();
+      if (idx === 6) bodyHTML = buildStage6();
+
+      const container = document.getElementById('screen-container');
+      container.innerHTML = `
+        <div class="space-y-4 animate-card">
+          <!-- Header thẻ thử thách -->
+          <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200/80">
+            <div class="bg-gradient-to-r ${meta.gradient} p-4 sm:p-5 text-white">
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <span class="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-extrabold">
+                  ${meta.badge}
+                </span>
+                <span class="px-3 py-1 rounded-full bg-black/25 text-xs font-extrabold">
+                  Điểm đạt: ${state.scores[idx]}/${meta.points}đ
+                </span>
+              </div>
+              <h2 class="font-display font-black text-xl sm:text-2xl leading-snug">
+                ${meta.name}
+              </h2>
+            </div>
+
+            <div class="p-4 sm:p-5">
+              ${bodyHTML}
+            </div>
+          </div>
+
+          <!-- Nút chuyển tiếp -->
+          <div class="pb-4">
+            ${isDone ? `
+              <button type="button" onclick="goNextStage()"
+                class="touch-target w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 animate-card">
+                <span>${idx < 6 ? `TIẾP TỤC SANG THỬ THÁCH ${idx + 1} ➡️` : '🏆 NHẬN CHỨNG NHẬN CHUYÊN GIA'}</span>
+              </button>
+            ` : `
+              <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-700 text-center text-xs sm:text-sm font-bold text-slate-300">
+                💡 Hoàn thành thử thách và bấm nút <strong>"Chốt Đáp Án"</strong> để mở khóa chặng tiếp theo!
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function goNextStage() {
+      sfxClick();
+      if (state.stageIndex < 6) {
+        state.stageIndex++;
+        render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        state.view = 'certificate';
+        sfxVictory();
+        render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        triggerConfetti();
+      }
+    }
+
+    /* -------------------------------------------------------------------------
+       THỬ THÁCH 1: BÍ ẨN ĐẠI DƯƠNG BĂNG & MẬT ĐỘ CỰC ĐẠI CỦA NƯỚC Ở 4°C (15đ)
+       ------------------------------------------------------------------------- */
+    function buildStage1() {
+      const options = [
+        {
+          id: 'A',
+          text: 'Khi đun nóng nước đá từ 0°C lên 4°C, một phần liên kết hydrogen bị phá vỡ làm sụp đổ cấu trúc tứ diện rỗng, các phân tử H<sub>2</sub>O chen vào khoảng trống khiến thể tích giảm và khối lượng riêng đạt cực đại ở 4°C.'
+        },
+        {
+          id: 'B',
+          text: 'Ở 4°C, toàn bộ liên kết hydrogen giữa các phân tử H<sub>2</sub>O bị đứt gãy hoàn toàn, chuyển thành liên kết ion làm các phân tử hút chặt nhau nhất.'
+        },
+        {
+          id: 'C',
+          text: 'Từ 0°C đến 4°C, chuyển động nhiệt làm giãn nở khoảng cách giữa các nguyên tử O và H trong cùng một phân tử H<sub>2</sub>O nên khối lượng riêng tăng lên.'
+        },
+        {
+          id: 'D',
+          text: 'Ở 4°C, các phân tử H<sub>2</sub>O hình thành mạng tinh thể lục giác đều hoàn hảo với nhiều khoảng trống nhất nên nặng hơn nước ở 0°C.'
+        }
+      ];
+
+      return `
+        <div class="space-y-4">
+          <!-- Hình vẽ SVG trực quan -->
+          ${SVG_ILLUSTRATIONS.iceVsWater}
+
+          <p class="font-extrabold text-slate-800 text-base sm:text-[17px] leading-relaxed">
+            Trong tự nhiên, nước lỏng có khối lượng riêng lớn nhất tại <strong>4°C</strong> (d ≈ 1,00 g/cm<sup>3</sup>), lớn hơn cả nước đá ở 0°C (d ≈ 0,92 g/cm<sup>3</sup>). Giải thích vi mô nào sau đây là <strong>chính xác nhất</strong>?
+          </p>
+
+          <div class="space-y-2.5">
+            ${options.map(opt => {
+              const picked = state.answers.s1 === opt.id;
+              let cls = 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-sky-50';
+              if (state.submitted[1]) {
+                if (opt.id === 'A') cls = 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-200';
+                else if (picked) cls = 'bg-rose-50 border-rose-500 text-rose-950';
+                else cls = 'bg-slate-50 border-slate-200 text-slate-400 opacity-70';
+              } else if (picked) {
+                cls = 'bg-sky-50 border-sky-500 text-sky-950 ring-2 ring-sky-200';
+              }
+
+              return `
+                <button type="button" onclick="pickSingle('s1', '${opt.id}', 1)" ${state.submitted[1] ? 'disabled' : ''}
+                  class="touch-target w-full text-left p-3.5 rounded-2xl border-2 flex items-start gap-3 ${cls}">
+                  <span class="w-7 h-7 rounded-lg font-black text-sm flex items-center justify-center flex-shrink-0 mt-0.5
+                    ${picked ? 'bg-sky-600 text-white' : 'bg-white border border-slate-300 text-slate-700'}">
+                    ${opt.id}
+                  </span>
+                  <span class="text-sm sm:text-[15px] font-semibold leading-relaxed">${opt.text}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          ${!state.submitted[1] ? `
+            <button type="button" onclick="gradeSingle('s1', 'A', 1, 15)"
+              class="touch-target w-full py-3.5 px-5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-sm sm:text-base shadow">
+              ✔️ Chốt Đáp Án Thử Thách 1
+            </button>
+          ` : `
+            <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200 text-sm text-slate-700 leading-relaxed space-y-2">
+              <div class="font-extrabold text-sky-900">🔬 Giải mã khoa học:</div>
+              <p>Ở 0°C, nước đá có cấu trúc tinh thể rỗng. Khi tăng nhiệt độ từ 0°C → 4°C, có hai yếu tố cạnh tranh: (1) sự phá vỡ một phần liên kết hydrogen làm sụp cấu trúc rỗng khiến <strong>thể tích giảm</strong> (chiếm ưu thế); (2) chuyển động nhiệt tăng làm giãn nở thể tích. Tại <strong>4°C</strong>, thể tích đạt cực tiểu nên khối lượng riêng đạt cực đại!</p>
+              <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs sm:text-sm">
+                <strong class="text-amber-900">🎓 Góc Chuyên Sâu HSG:</strong> Năng lượng của một liên kết hydrogen trong nước vào khoảng <strong>20 kJ/mol</strong> (chỉ bằng ~1/20 năng lượng liên kết cộng hóa trị O–H là 463 kJ/mol), nên chỉ cần cung cấp nhiệt lượng nhỏ đã làm đứt một phần liên kết hydrogen nhưng chưa thể phá vỡ phân tử H<sub>2</sub>O.
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    /* -------------------------------------------------------------------------
+       THỬ THÁCH 2: ĐẤU TRƯỜNG ĐỒNG PHÂN ORTHO- VÀ PARA-NITROPHENOL (HSG - 20đ)
+       ------------------------------------------------------------------------- */
+    function buildStage2() {
+      const options = [
+        {
+          id: 'A',
+          text: '<em>ortho</em>-nitrophenol có nhiệt độ sôi thấp hơn và dễ bay hơi theo hơi nước hơn vì tạo được <strong>liên kết hydrogen nội phân tử</strong> khép vòng bền vững, làm giảm lực hút giữa các phân tử với nhau.'
+        },
+        {
+          id: 'B',
+          text: '<em>ortho</em>-nitrophenol có nhiệt độ sôi cao hơn vì nhóm –OH và nhóm –NO<sub>2</sub> ở gần nhau tạo ra liên kết ion cực mạnh.'
+        },
+        {
+          id: 'C',
+          text: '<em>para</em>-nitrophenol dễ bay hơi hơn vì hai nhóm thế ở vị trí đối xứng (1,4) làm triệt tiêu hoàn toàn moment lưỡng cực phân tử.'
+        },
+        {
+          id: 'D',
+          text: 'Hai đồng phân có nhiệt độ sôi bằng nhau tuyệt đối vì có cùng công thức phân tử C<sub>6</sub>H<sub>5</sub>NO<sub>3</sub> và phân tử khối M = 139.'
+        }
+      ];
+
+      return `
+        <div class="space-y-4">
+          <!-- Sơ đồ SVG o-nitrophenol vs p-nitrophenol -->
+          ${SVG_ILLUSTRATIONS.nitrophenolIsomers}
+
+          <p class="font-extrabold text-slate-800 text-base sm:text-[17px] leading-relaxed">
+            Trong phòng thí nghiệm Hóa hữu cơ, để tách riêng hỗn hợp hai đồng phân <strong><em>ortho</em>-nitrophenol</strong> và <strong><em>para</em>-nitrophenol</strong>, người ta dùng phương pháp chưng cất lôi cuốn hơi nước. Vì sao <em>ortho</em>-nitrophenol lại tách ra trước?
+          </p>
+
+          <div class="space-y-2.5">
+            ${options.map(opt => {
+              const picked = state.answers.s2 === opt.id;
+              let cls = 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-amber-50';
+              if (state.submitted[2]) {
+                if (opt.id === 'A') cls = 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-200';
+                else if (picked) cls = 'bg-rose-50 border-rose-500 text-rose-950';
+                else cls = 'bg-slate-50 border-slate-200 text-slate-400 opacity-70';
+              } else if (picked) {
+                cls = 'bg-amber-50 border-amber-500 text-amber-950 ring-2 ring-amber-200';
+              }
+
+              return `
+                <button type="button" onclick="pickSingle('s2', '${opt.id}', 2)" ${state.submitted[2] ? 'disabled' : ''}
+                  class="touch-target w-full text-left p-3.5 rounded-2xl border-2 flex items-start gap-3 ${cls}">
+                  <span class="w-7 h-7 rounded-lg font-black text-sm flex items-center justify-center flex-shrink-0 mt-0.5
+                    ${picked ? 'bg-amber-600 text-white' : 'bg-white border border-slate-300 text-slate-700'}">
+                    ${opt.id}
+                  </span>
+                  <span class="text-sm sm:text-[15px] font-semibold leading-relaxed">${opt.text}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          ${!state.submitted[2] ? `
+            <button type="button" onclick="gradeSingle('s2', 'A', 2, 20)"
+              class="touch-target w-full py-3.5 px-5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-sm sm:text-base shadow">
+              ✔️ Chốt Đáp Án Thử Thách 2
+            </button>
+          ` : `
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-slate-700 leading-relaxed space-y-2">
+              <div class="font-extrabold text-amber-900">🔥 Tuyệt chiêu phân biệt 2 loại liên kết Hydrogen:</div>
+              <p>• <strong>Liên kết hydrogen nội phân tử</strong> (trong <em>o</em>-nitrophenol): Khép kín vòng 6 cạnh ngay bên trong 1 phân tử → làm phân tử "tự thỏa mãn", giảm khả năng hút các phân tử bên cạnh và giảm tạo liên kết H với nước → <strong>nhiệt độ sôi thấp hơn (216°C), ít tan trong nước, dễ bay hơi</strong>.</p>
+              <p>• <strong>Liên kết hydrogen liên phân tử</strong> (trong <em>p</em>-nitrophenol): Nối các phân tử lại thành chuỗi dài → <strong>nhiệt độ sôi cao hơn nhiều (279°C)</strong> và tan tốt trong nước hơn.</p>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function pickSingle(key, optionId, stageNum) {
+      if (state.submitted[stageNum]) return;
+      sfxClick();
+      state.answers[key] = optionId;
+      render();
+    }
+
+    function gradeSingle(key, correctId, stageNum, pts) {
+      if (!state.answers[key]) {
+        showToast('Hãy chạm chọn một phương án trước khi chốt đáp án nhé!', '👆');
+        return;
+      }
+      state.submitted[stageNum] = true;
+      if (state.answers[key] === correctId) {
+        state.scores[stageNum] = pts;
+        sfxSuccess();
+      } else {
+        sfxError();
+      }
+      render();
+    }
+
+    /* -------------------------------------------------------------------------
+       THỬ THÁCH 3: THANG NHIỆT ĐỘ SÔI & DIMER CARBOXYLIC ACID (15đ)
+       ------------------------------------------------------------------------- */
+    function buildStage3() {
+      const items = [
+        { id: 'C3H8', formula: 'C<sub>3</sub>H<sub>8</sub>', name: 'Propane (M = 44)', desc: 'Alkane không phân cực' },
+        { id: 'CH3OCH3', formula: 'CH<sub>3</sub>–O–CH<sub>3</sub>', name: 'Dimethyl ether (M = 46)', desc: 'Phân tử phân cực, không có H linh động' },
+        { id: 'C2H5OH', formula: 'C<sub>2</sub>H<sub>5</sub>OH', name: 'Ethanol (M = 46)', desc: 'Alcohol có nhóm –OH tạo liên kết H' },
+        { id: 'CH3COOH', formula: 'CH<sub>3</sub>COOH', name: 'Acetic acid (M = 60)', desc: 'Carboxylic acid tạo dimer bền vững' }
+      ];
+
+      const correctSeq = ['C3H8', 'CH3OCH3', 'C2H5OH', 'CH3COOH'];
+      const userSeq = state.answers.s3Order;
+      const isAllRight = userSeq.length === 4 && userSeq.every((v, i) => v === correctSeq[i]);
+
+      return `
+        <div class="space-y-4">
+          <p class="font-extrabold text-slate-800 text-base sm:text-[17px] leading-relaxed">
+            Chạm lần lượt vào 4 hợp chất hữu cơ dưới đây để sắp xếp theo chiều <strong>nhiệt độ sôi TĂNG DẦN</strong> (từ thấp nhất #1 đến cao nhất #4):
+          </p>
+
+          <div class="space-y-2.5">
+            ${items.map(item => {
+              const idx = userSeq.indexOf(item.id);
+              const picked = idx !== -1;
+              let cardCls = 'bg-slate-50 border-slate-200 hover:bg-rose-50/70';
+              if (state.submitted[3]) {
+                const trueIdx = correctSeq.indexOf(item.id);
+                cardCls = (idx === trueIdx)
+                  ? 'bg-emerald-50 border-emerald-500'
+                  : 'bg-rose-50 border-rose-400';
+              } else if (picked) {
+                cardCls = 'bg-rose-50 border-rose-500 ring-2 ring-rose-200';
+              }
+
+              return `
+                <button type="button" onclick="toggleS3Item('${item.id}')" ${state.submitted[3] ? 'disabled' : ''}
+                  class="touch-target w-full text-left p-3.5 rounded-2xl border-2 flex items-center justify-between gap-3 ${cardCls}">
+                  <div>
+                    <div class="font-black text-base text-slate-900">${item.formula} <span class="text-xs sm:text-sm font-bold text-slate-600">(${item.name})</span></div>
+                    <div class="text-xs font-semibold text-slate-500 mt-0.5">${item.desc}</div>
+                  </div>
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-base flex-shrink-0
+                    ${picked ? 'bg-rose-600 text-white shadow' : 'bg-white border-2 border-dashed border-slate-300 text-slate-400'}">
+                    ${picked ? `#${idx + 1}` : '?'}
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-100 border border-slate-200 text-xs sm:text-sm font-extrabold text-slate-700 flex flex-wrap items-center justify-between gap-1">
+            <span>Chuỗi đã chọn:</span>
+            <span class="text-rose-700">
+              ${userSeq.length === 0 ? 'Chưa chọn' : userSeq.map(id => items.find(x => x.id === id).formula).join('  <  ')}
+            </span>
+          </div>
+
+          ${!state.submitted[3] ? `
+            <button type="button" onclick="submitStage3()"
+              class="touch-target w-full py-3.5 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm sm:text-base shadow">
+              ✔️ Chốt Thứ Tự Thử Thách 3
+            </button>
+          ` : `
+            <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-sm text-slate-700 leading-relaxed space-y-2">
+              <div class="font-extrabold text-rose-900">🌡️ Thứ tự chuẩn: C<sub>3</sub>H<sub>8</sub> (-42°C) &lt; CH<sub>3</sub>OCH<sub>3</sub> (-24°C) &lt; C<sub>2</sub>H<sub>5</sub>OH (78,3°C) &lt; CH<sub>3</sub>COOH (118°C)</div>
+              <p>• <strong>C<sub>3</sub>H<sub>8</sub></strong> không phân cực, chỉ có lực khuếch tán London yếu.<br/>
+              • <strong>CH<sub>3</sub>OCH<sub>3</sub></strong> phân cực nên có thêm lực hút lưỡng cực – lưỡng cực (Van der Waals mạnh hơn C<sub>3</sub>H<sub>8</sub>) nhưng không tạo được liên kết H.<br/>
+              • <strong>C<sub>2</sub>H<sub>5</sub>OH</strong> tạo liên kết hydrogen liên phân tử nên nhiệt độ sôi nhảy vọt lên 78,3°C.<br/>
+              • <strong>CH<sub>3</sub>COOH</strong> tạo <strong>cấu trúc dimer vòng 8 cạnh</strong> gồm 2 liên kết hydrogen rất bền giữa hai phân tử nên sôi ở tận 118°C!</p>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function toggleS3Item(id) {
+      if (state.submitted[3]) return;
+      sfxClick();
+      const idx = state.answers.s3Order.indexOf(id);
+      if (idx !== -1) state.answers.s3Order.splice(idx, 1);
+      else state.answers.s3Order.push(id);
+      render();
+    }
+
+    function submitStage3() {
+      if (state.answers.s3Order.length < 4) {
+        showToast('Bạn hãy chạm chọn đủ cả 4 chất theo thứ tự tăng dần nhé!', '🌡️');
+        return;
+      }
+      state.submitted[3] = true;
+      const correctSeq = ['C3H8', 'CH3OCH3', 'C2H5OH', 'CH3COOH'];
+      const ok = state.answers.s3Order.every((v, i) => v === correctSeq[i]);
+      if (ok) {
+        state.scores[3] = 15;
+        sfxSuccess();
+      } else {
+        sfxError();
+      }
+      render();
+    }
+
+    /* -------------------------------------------------------------------------
+       THỬ THÁCH 4: ĐÚNG / SAI 4 MỆNH ĐỀ - LỰC KHUẾCH TÁN LONDON (20đ)
+       ------------------------------------------------------------------------- */
+    function buildStage4() {
+      const statements = [
+        {
+          k: 'a',
+          text: 'Trong dãy khí hiếm từ He, Ne, Ar, Kr đến Xe, nhiệt độ sôi tăng dần vì số lượng electron và bán kính nguyên tử tăng, làm đám mây electron dễ bị phân cực hóa và tăng lực khuếch tán London.',
+          ans: true,
+          exp: 'ĐÚNG! Lực khuếch tán London (lưỡng cực tạm thời – lưỡng cực cảm ứng) tỷ lệ thuận với số electron và kích thước vỏ electron.'
+        },
+        {
+          k: 'b',
+          text: 'Phân tử I<sub>2</sub> là phân tử cộng hóa trị không phân cực nên giữa các phân tử I<sub>2</sub> hoàn toàn không tồn tại bất kỳ lực hút tĩnh điện nào.',
+          ans: false,
+          exp: 'SAI! Sự chuyển động hỗn loạn không ngừng của các electron trong phân tử I<sub>2</sub> vẫn tạo ra các lưỡng cực tạm thời, sinh ra tương tác Van der Waals đủ mạnh để I<sub>2</sub> tồn tại ở thể rắn.'
+        },
+        {
+          k: 'c',
+          text: 'So với cùng phân tử khối, đồng phân mạch thẳng (như pentane) có diện tích tiếp xúc bề mặt lớn hơn đồng phân phân nhánh nhiều (như neopentane) nên có tương tác Van der Waals lớn hơn và nhiệt độ sôi cao hơn.',
+          ans: true,
+          exp: 'ĐÚNG (Kiến thức HSG)! Diện tích tiếp xúc giữa các phân tử càng lớn thì tương tác Van der Waals càng mạnh (pentane sôi ở 36°C, còn neopentane hình cầu sôi ở 9,5°C).'
+        },
+        {
+          k: 'd',
+          text: 'Trong dãy hydrogen halide từ HF, HCl, HBr đến HI, nhiệt độ sôi tăng đều đặn từ HF đến HI do khối lượng phân tử tăng dần.',
+          ans: false,
+          exp: 'SAI! HF có nhiệt độ sôi cao bất thường (+19,5°C) cao hơn cả HCl (-85°C), HBr (-67°C) và HI (-35°C) nhờ tạo được liên kết hydrogen liên phân tử rất bền.'
+        }
+      ];
+
+      return `
+        <div class="space-y-4">
+          <p class="font-extrabold text-slate-800 text-base sm:text-[17px] leading-relaxed">
+            Đánh giá tính <strong>Đúng</strong> hoặc <strong>Sai</strong> cho 4 nhận định chuyên sâu về tương tác Van der Waals dưới đây (5 điểm / ý đúng):
+          </p>
+
+          <div class="space-y-3">
+            ${statements.map(st => {
+              const val = state.answers.s4[st.k];
+              const isRight = val === st.ans;
+              let wrapCls = 'border-slate-200 bg-slate-50';
+              if (state.submitted[4]) {
+                wrapCls = isRight ? 'border-emerald-500 bg-emerald-50/60' : 'border-rose-400 bg-rose-50/60';
+              }
+
+              return `
+                <div class="p-3.5 rounded-2xl border-2 ${wrapCls}">
+                  <div class="text-sm sm:text-[15px] font-bold text-slate-800 leading-relaxed mb-3">
+                    <span class="inline-block px-2 py-0.5 rounded bg-indigo-600 text-white font-black text-xs mr-1.5">${st.k})</span>
+                    ${st.text}
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" onclick="pickTF4('${st.k}', true)" ${state.submitted[4] ? 'disabled' : ''}
+                      class="touch-target py-2.5 px-3 rounded-xl font-extrabold text-sm border-2
+                      ${val === true ? 'bg-emerald-600 border-emerald-600 text-white shadow' : 'bg-white border-slate-200 text-slate-700 hover:bg-emerald-50'}">
+                      ⭕ ĐÚNG
+                    </button>
+                    <button type="button" onclick="pickTF4('${st.k}', false)" ${state.submitted[4] ? 'disabled' : ''}
+                      class="touch-target py-2.5 px-3 rounded-xl font-extrabold text-sm border-2
+                      ${val === false ? 'bg-rose-600 border-rose-600 text-white shadow' : 'bg-white border-slate-200 text-slate-700 hover:bg-rose-50'}">
+                      ❌ SAI
+                    </button>
+                  </div>
+
+                  ${state.submitted[4] ? `
+                    <div class="mt-2.5 pt-2.5 border-t border-slate-200 text-xs sm:text-sm font-semibold leading-relaxed ${isRight ? 'text-emerald-800' : 'text-rose-800'}">
+                      ${isRight ? '✅ Chuẩn xác (+5đ): ' : '💡 Giải thích: '} ${st.exp}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${!state.submitted[4] ? `
+            <button type="button" onclick="submitStage4()"
+              class="touch-target w-full py-3.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm sm:text-base shadow">
+              ✔️ Chốt 4 Ý Đúng/Sai
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function pickTF4(key, val) {
+      if (state.submitted[4]) return;
+      sfxClick();
+      state.answers.s4[key] = val;
+      render();
+    }
+
+    function submitStage4() {
+      const a = state.answers.s4;
+      if (a.a === null || a.b === null || a.c === null || a.d === null) {
+        showToast('Bạn hãy chọn Đúng hoặc Sai cho đầy đủ cả 4 ý a, b, c, d nhé!', '🧪');
+        return;
+      }
+      state.submitted[4] = true;
+      const ansMap = { a: true, b: false, c: true, d: false };
+      let pts = 0;
+      Object.keys(ansMap).forEach(k => {
+        if (a[k] === ansMap[k]) pts += 5;
+      });
+      state.scores[4] = pts;
+      if (pts >= 15) sfxSuccess(); else sfxError();
+      render();
+    }
+
+    /* -------------------------------------------------------------------------
+       THỬ THÁCH 5: GHÉP ĐÔI HIỆN TƯỢNG THỰC TẾ & BẢN CHẤT VI MÔ (15đ)
+       ------------------------------------------------------------------------- */
+    const S5_LEFT = [
+      { id: 'L1', icon: '🕷️', text: 'Nhện nước lướt nhẹ trên mặt ao mà không chìm' },
+      { id: 'L2', icon: '🦎', text: 'Tắc kè Gecko leo ngược trên tấm kính nhẵn bóng' },
+      { id: 'L3', icon: '🧬', text: 'Hai mạch đơn DNA xoắn kép ổn định & tự nhân đôi' },
+      { id: 'L4', icon: '💧', text: 'Khí NH<sub>3</sub> và C<sub>2</sub>H<sub>5</sub>OH tan cực tốt trong nước' }
+    ];
+
+    const S5_RIGHT = [
+      { id: 'R1', text: 'Sức căng bề mặt lớn của H<sub>2</sub>O do mạng lưới liên kết hydrogen liên phân tử tạo thành lớp màng đàn hồi' },
+      { id: 'R2', text: 'Hàng tỉ sợi lông nano (setae) dưới chân tạo tương tác Van der Waals tổng hợp với bề mặt kính' },
+      { id: 'R3', text: 'Liên kết hydrogen chọn lọc giữa các cặp base A=T (2 liên kết) và G≡C (3 liên kết)' },
+      { id: 'R4', text: 'Hình thành liên kết hydrogen liên phân tử linh hoạt giữa chất tan với dung môi H<sub>2</sub>O' }
+    ];
+
+    const S5_KEY = { L1: 'R1', L2: 'R2', L3: 'R3', L4: 'R4' };
+
+    function buildStage5() {
+      const matches = state.answers.s5Matches;
+      // Sắp xếp cột phải hơi xáo trộn trực quan khi hiển thị
+      const displayRight = [S5_RIGHT[1], S5_RIGHT[3], S5_RIGHT[0], S5_RIGHT[2]];
+
+      return `
+        <div class="space-y-4">
+          <p class="font-extrabold text-slate-800 text-base sm:text-[17px] leading-relaxed">
+            Chạm chọn một <strong>Hiện tượng thiên nhiên (Cột A)</strong>, sau đó chạm vào <strong>Bản chất vi mô tương ứng (Cột B)</strong> để ghép cặp (làm đúng trọn vẹn 4 cặp đạt 15 điểm, mỗi cặp đúng 3,75đ làm tròn):
+          </p>
+
+          <!-- Cột A: Hiện tượng thực tế -->
+          <div class="space-y-2">
+            <div class="text-xs font-black uppercase tracking-wider text-emerald-700">📌 Cột A: Hiện tượng thực tế</div>
+            ${S5_LEFT.map(item => {
+              const matchedRId = matches[item.id];
+              const isSelected = state.s5SelectedLeft === item.id;
+              let cls = 'bg-slate-50 border-slate-200 text-slate-800';
+              if (state.submitted[5]) {
+                cls = (matchedRId === S5_KEY[item.id])
+                  ? 'bg-emerald-50 border-emerald-500 text-emerald-950'
+                  : 'bg-rose-50 border-rose-500 text-rose-950';
+              } else if (isSelected) {
+                cls = 'bg-emerald-100 border-emerald-600 text-emerald-950 ring-2 ring-emerald-300';
+              } else if (matchedRId) {
+                cls = 'bg-teal-50 border-teal-400 text-teal-950';
+              }
+
+              const matchedIndex = matchedRId ? (displayRight.findIndex(r => r.id === matchedRId) + 1) : null;
+
+              return `
+                <button type="button" onclick="selectS5Left('${item.id}')" ${state.submitted[5] ? 'disabled' : ''}
+                  class="touch-target w-full text-left p-3 rounded-2xl border-2 flex items-center justify-between gap-2.5 ${cls}">
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-xl flex-shrink-0">${item.icon}</span>
+                    <span class="text-sm font-bold leading-snug">${item.text}</span>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-black flex-shrink-0
+                    ${matchedIndex ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-300 text-slate-500'}">
+                    ${matchedIndex ? `Nối #${matchedIndex}` : 'Chọn'}
+                  </span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Cột B: Bản chất hóa học -->
+          <div class="space-y-2 pt-1">
+            <div class="text-xs font-black uppercase tracking-wider text-indigo-700">🔬 Cột B: Bản chất tương tác vi mô</div>
+            ${displayRight.map((rItem, idx) => {
+              const numLabel = idx + 1;
+              // Kiểm tra xem thẻ phải này đang được nối với thẻ trái nào không
+              const linkedLeftId = Object.keys(matches).find(lk => matches[lk] === rItem.id);
+              const linkedLeftObj = S5_LEFT.find(l => l.id === linkedLeftId);
+
+              let cls = 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50';
+              if (state.submitted[5]) {
+                const isRightMatch = linkedLeftId && S5_KEY[linkedLeftId] === rItem.id;
+                cls = isRightMatch ? 'bg-emerald-50 border-emerald-500 text-emerald-950' : 'bg-rose-50 border-rose-400 text-rose-950';
+              } else if (linkedLeftObj) {
+                cls = 'bg-indigo-50 border-indigo-400 text-indigo-950';
+              }
+
+              return `
+                <button type="button" onclick="selectS5Right('${rItem.id}')" ${state.submitted[5] ? 'disabled' : ''}
+                  class="touch-target w-full text-left p-3 rounded-2xl border-2 flex items-start gap-2.5 ${cls}">
+                  <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
+                    #${numLabel}
+                  </span>
+                  <div class="flex-grow">
+                    <div class="text-xs sm:text-sm font-semibold leading-relaxed">${rItem.text}</div>
+                    ${linkedLeftObj ? `
+                      <div class="mt-1 inline-block px-2 py-0.5 rounded bg-emerald-600 text-white text-[11px] font-extrabold">
+                        Đã ghép với: ${linkedLeftObj.icon} ${linkedLeftObj.text.slice(0, 26)}...
+                      </div>
+                    ` : ''}
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          ${!state.submitted[5] ? `
+            <button type="button" onclick="submitStage5()"
+              class="touch-target w-full py-3.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm sm:text-base shadow">
+              ✔️ Chốt Kết Quả Ghép Cặp
+            </button>
+          ` : `
+            <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs sm:text-sm text-slate-700 leading-relaxed">
+              <strong class="text-emerald-900">🌟 Tổng kết kết nối:</strong> Nhện nước → Sức căng bề mặt H<sub>2</sub>O; Tắc kè Gecko → Lực Van der Waals từ lông nano; DNA → Liên kết H giữa A=T, G≡C; NH<sub>3</sub> & C<sub>2</sub>H<sub>5</sub>OH → Tạo liên kết H với nước.
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function selectS5Left(leftId) {
+      if (state.submitted[5]) return;
+      sfxClick();
+      state.s5SelectedLeft = leftId;
+      render();
+    }
+
+    function selectS5Right(rightId) {
+      if (state.submitted[5]) return;
+      if (!state.s5SelectedLeft) {
+        showToast('Hãy chạm chọn một hiện tượng ở Cột A trước, sau đó chạm vào Cột B để nối nhé!', '👆');
+        return;
+      }
+      sfxClick();
+      // Nếu rightId đang nối với một leftId khác thì gỡ kết nối cũ
+      Object.keys(state.answers.s5Matches).forEach(lk => {
+        if (state.answers.s5Matches[lk] === rightId) {
+          delete state.answers.s5Matches[lk];
+        }
+      });
+      state.answers.s5Matches[state.s5SelectedLeft] = rightId;
+      // Tự chuyển sang thẻ trái tiếp theo chưa ghép
+      const nextUnmatched = S5_LEFT.find(l => !state.answers.s5Matches[l.id]);
+      state.s5SelectedLeft = nextUnmatched ? nextUnmatched.id : null;
+      render();
+    }
+
+    function submitStage5() {
+      if (Object.keys(state.answers.s5Matches).length < 4) {
+        showToast('Bạn hãy ghép đủ cả 4 cặp hiện tượng ở Cột A với Cột B nhé!', '🔗');
+        return;
+      }
+      state.submitted[5] = true;
+      let correctPairs = 0;
+      Object.keys(S5_KEY).forEach(lk => {
+        if (state.answers.s5Matches[lk] === S5_KEY[lk]) correctPairs++;
+      });
+      const scoreMap = { 0: 0, 1: 4, 2: 8, 3: 11, 4: 15 };
+      state.scores[5] = scoreMap[correctPairs];
+      if (correctPairs >= 3) sfxSuccess(); else sfxError();
+      render();
+    }
+
+    /* -------------------------------------------------------------------------
+       THỬ THÁCH 6: RƯƠNG TRI THỨC GIẢ KIM - ĐIỀN THẺ TỪ KHÓA (15đ)
+       ------------------------------------------------------------------------- */
+    const S6_BANK = [
+      { id: 'nof', label: 'N, O, F' },
+      { id: 'london', label: 'lưỡng cực tạm thời – cảm ứng' },
+      { id: 'covalent', label: 'liên kết cộng hóa trị' },
+      { id: 'clbr', label: 'Cl, Br, I' },
+      { id: 'ionic', label: 'liên kết ion' }
+    ];
+
+    const S6_CORRECT = ['nof', 'london', 'covalent'];
+
+    function buildStage6() {
+      const blanks = state.answers.s6Blanks;
+
+      const renderSlot = (slotIdx) => {
+        const chipId = blanks[slotIdx];
+        const chipObj = S6_BANK.find(c => c.id === chipId);
+        const isFocus = !state.submitted[6] && state.s6ActiveSlot === slotIdx;
+
+        let cls = 'bg-purple-50 border-purple-400 text-purple-900';
+        if (state.submitted[6]) {
+          cls = (chipId === S6_CORRECT[slotIdx])
+            ? 'bg-emerald-100 border-emerald-500 text-emerald-950'
+            : 'bg-rose-100 border-rose-500 text-rose-950';
+        } else if (isFocus) {
+          cls = 'bg-amber-100 border-amber-500 text-amber-950 active-slot-ring';
+        } else if (chipObj) {
+          cls = 'bg-indigo-100 border-indigo-500 text-indigo-950';
+        }
+
+        return `
+          <button type="button" onclick="focusS6Slot(${slotIdx})" ${state.submitted[6] ? 'disabled' : ''}
+            class="inline-flex items-center justify-center min-h-[38px] px-3 py-1 my-1 mx-0.5 rounded-xl border-2 border-dashed font-black text-sm align-middle transition ${cls}">
+            ${chipObj ? `<span>(${slotIdx + 1}) ${chipObj.label}</span>` : `<span>[ Ô trống (${slotIdx + 1}) ]</span>`}
+          </button>
+        `;
+      };
+
+      return `
+        <div class="space-y-4">
+          <p class="font-extrabold text-slate-800 text-base sm:text-[17px] leading-relaxed">
+            Chạm vào các <strong>Thẻ Khái Niệm</strong> bên dưới để hoàn thiện bản tổng kết Giả Kim và mở khóa Rương Tri Thức (5 điểm / ô đúng):
+          </p>
+
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-white to-indigo-50 border-2 border-purple-200 text-slate-800 text-[15px] sm:text-base font-bold leading-loose">
+            “Liên kết hydrogen là loại liên kết yếu được hình thành giữa nguyên tử H (đã liên kết với một nguyên tử có độ âm điện lớn, bán kính nhỏ như
+            ${renderSlot(0)}
+            ) với một nguyên tử khác có độ âm điện lớn còn cặp electron hóa trị chưa liên kết. Trong khi đó, tương tác Van der Waals là lực hút tĩnh điện lưỡng cực – lưỡng cực và tương tác
+            ${renderSlot(1)}
+            giữa các phân tử. Cả hai tương tác này đều yếu hơn nhiều so với liên kết ion và
+            ${renderSlot(2)}. ”
+          </div>
+
+          ${!state.submitted[6] ? `
+            <div>
+              <div class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">
+                🧩 Kho Thẻ Khái Niệm (Đang điền vào Ô trống số ${state.s6ActiveSlot + 1}):
+              </div>
+              <div class="flex flex-wrap gap-2">
+                ${S6_BANK.map(chip => {
+                  const used = blanks.includes(chip.id);
+                  return `
+                    <button type="button" onclick="chooseS6Chip('${chip.id}')" ${used ? 'disabled' : ''}
+                      class="touch-target px-3.5 py-2.5 rounded-xl font-extrabold text-sm border-2 transition
+                      ${used
+                        ? 'bg-slate-100 border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
+                        : 'bg-white border-purple-400 text-slate-900 hover:bg-purple-50 shadow-sm'}">
+                      ${chip.label}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <button type="button" onclick="submitStage6()"
+              class="touch-target w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white font-extrabold text-sm sm:text-base shadow-md">
+              🔓 MỞ KHÓA RƯƠNG TRI THỨC GIẢ KIM
+            </button>
+          ` : `
+            <div class="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-xs sm:text-sm text-slate-700 leading-relaxed">
+              <strong class="text-purple-900">🏆 Đáp án mở rương chuẩn xác:</strong> (1) <strong>N, O, F</strong> → (2) <strong>lưỡng cực tạm thời – cảm ứng</strong> → (3) <strong>liên kết cộng hóa trị</strong>.
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function focusS6Slot(idx) {
+      if (state.submitted[6]) return;
+      sfxClick();
+      if (state.answers.s6Blanks[idx] !== null) {
+        state.answers.s6Blanks[idx] = null;
+      }
+      state.s6ActiveSlot = idx;
+      render();
+    }
+
+    function chooseS6Chip(chipId) {
+      if (state.submitted[6]) return;
+      sfxClick();
+      state.answers.s6Blanks[state.s6ActiveSlot] = chipId;
+      const nextSlot = state.answers.s6Blanks.findIndex(v => v === null);
+      if (nextSlot !== -1) state.s6ActiveSlot = nextSlot;
+      render();
+    }
+
+    function submitStage6() {
+      if (state.answers.s6Blanks.includes(null)) {
+        showToast('Hãy điền đủ cả 3 ô trống để mở khóa Rương Tri Thức nhé!', '🔐');
+        return;
+      }
+      state.submitted[6] = true;
+      let pts = 0;
+      state.answers.s6Blanks.forEach((v, i) => {
+        if (v === S6_CORRECT[i]) pts += 5;
+      });
+      state.scores[6] = pts;
+      if (pts >= 10) sfxSuccess(); else sfxError();
+      render();
+    }
+
+    /* =========================================================================
+       9. MÀN HÌNH CHỨNG NHẬN CHUYÊN GIA LIÊN KẾT PHÂN TỬ
+       ========================================================================= */
+    function renderCertificate() {
+      const total = getTotalScore();
+      let rankName = '';
+      let badgeText = '';
+      let comment = '';
+
+      if (total >= 90) {
+        rankName = 'BẬC THẦY VI MÔ (CẤP ĐỘ HSG)';
+        badgeText = '👑 Huyền Thoại Giả Kim';
+        comment = 'Tư duy hóa học xuất sắc! Bạn đã giải mã trọn vẹn các tương tác phân tử phức tạp từ cấu trúc nước đá, đồng phân nitrophenol đến lực khuếch tán London.';
+      } else if (total >= 70) {
+        rankName = 'CHUYÊN GIA HÓA LÝ';
+        badgeText = '🌟 Tinh Anh Lớp Chọn';
+        comment = 'Thành tích rất ấn tượng! Bạn nắm vững bản chất liên kết hydrogen và tương tác Van der Waals để giải thích các hiện tượng tự nhiên.';
+      } else {
+        rankName = 'NHÀ GIẢ KIM TẬP SỰ';
+        badgeText = '⚗️ Tiềm Năng Khám Phá';
+        comment = 'Bạn đã hoàn thành đấu trường! Hãy xem lại phần giải mã khoa học ở từng chặng và thử sức lại để chạm mốc 100 điểm nhé.';
+      }
+
+      const d = new Date();
+      const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+      const container = document.getElementById('screen-container');
+      container.innerHTML = `
+        <div class="space-y-4 animate-card">
+          <div class="alchemy-cert rounded-3xl p-5 sm:p-6">
+            <div class="flex items-center justify-between border-b-2 border-indigo-200 pb-3 mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-2xl">🏅</span>
+                <div>
+                  <div class="text-[11px] font-black uppercase tracking-wider text-indigo-700">Chứng Nhận Đấu Trường Giả Kim</div>
+                  <div class="text-xs font-bold text-slate-500">Hóa học 10 • Ngày ${dateFormatted}</div>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-xs border border-amber-300">
+                ${badgeText}
+              </span>
+            </div>
+
+            <div class="text-center my-2">
+              <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Chứng nhận Nhà Hóa Học Trẻ</div>
+              <h2 class="font-display font-black text-2xl sm:text-3xl text-slate-900 mb-1">
+                ${escapeHTML(state.playerName)}
+              </h2>
+              <div class="inline-block px-3.5 py-1 rounded-full bg-indigo-600 text-white font-extrabold text-xs sm:text-sm mb-3">
+                Lớp: ${escapeHTML(state.playerClass)}
+              </div>
+
+              <div class="my-2">
+                <div class="inline-flex flex-col items-center justify-center px-6 py-3 rounded-2xl bg-white border-2 border-indigo-300 shadow-sm">
+                  <span class="text-xs font-extrabold uppercase text-slate-500">Tổng điểm đạt được</span>
+                  <div class="font-display font-black text-4xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600">
+                    ${total}<span class="text-xl text-slate-400">/100đ</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 font-display font-black text-base sm:text-lg text-amber-700">
+                🎖️ Danh hiệu: ${rankName}
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600 font-semibold mt-1.5 leading-relaxed">
+                ${comment}
+              </p>
+            </div>
+
+            <!-- Bảng phân tích điểm từng chặng -->
+            <div class="mt-4 pt-3.5 border-t border-indigo-200">
+              <div class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2.5 text-center">
+                📊 Bảng Điểm Chi Tiết 6 Thử Thách
+              </div>
+              <div class="space-y-1.5 text-xs sm:text-sm font-bold">
+                ${STAGES_META.map(m => {
+                  const sc = state.scores[m.id];
+                  const perfect = sc === m.points;
+                  return `
+                    <div class="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200">
+                      <span class="text-slate-700">${m.id}. ${m.name}</span>
+                      <span class="font-black px-2.5 py-0.5 rounded-lg flex-shrink-0 ${perfect ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">
+                        ${sc}/${m.points}đ
+                      </span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <div class="mt-4 text-center text-xs font-extrabold text-indigo-800 bg-indigo-100/80 py-2.5 px-3 rounded-xl">
+              📸 Chụp ảnh màn hình Chứng Nhận này để gửi báo cáo kết quả cho Giáo viên nhé!
+            </div>
+          </div>
+
+          <button type="button" onclick="restartGame()"
+            class="touch-target w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 text-white font-black text-base sm:text-lg shadow-lg flex items-center justify-center gap-2">
+            <span>🔄 CHƠI LẠI ĐỂ CHINH PHỤC 100 ĐIỂM</span>
+          </button>
+        </div>
+      `;
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function restartGame() {
+      sfxClick();
+      state = {
+        view: 'stage',
+        playerName: state.playerName,
+        playerClass: state.playerClass,
+        stageIndex: 1,
+        scores: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+        answers: {
+          s1: null,
+          s2: null,
+          s3Order: [],
+          s4: { a: null, b: null, c: null, d: null },
+          s5Matches: {},
+          s6Blanks: [null, null, null]
+        },
+        submitted: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+        s5SelectedLeft: null,
+        s6ActiveSlot: 0
+      };
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =========================================================================
+       10. PHÁO HOA CHÚC MỪNG & RENDER CHÍNH
+       ========================================================================= */
+    function triggerConfetti() {
+      const canvas = document.getElementById('celebration-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const palette = ['#6366F1', '#06B6D4', '#F59E0B', '#10B981', '#EC4899', '#A855F7'];
+      const particles = Array.from({ length: 100 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        w: Math.random() * 9 + 5,
+        h: Math.random() * 6 + 4,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        vy: Math.random() * 3.5 + 2,
+        vx: Math.random() * 2 - 1,
+        rot: Math.random() * 360,
+        vrot: Math.random() * 8 - 4
+      }));
+
+      let tick = 0;
+      function loop() {
+        tick++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.vy;
+          p.x += p.vx;
+          p.rot += p.vrot;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        if (tick < 190) requestAnimationFrame(loop);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      loop();
+    }
+
+    function render() {
+      updateHUD();
+      if (state.view === 'welcome') renderWelcome();
+      else if (state.view === 'stage') renderStage();
+      else if (state.view === 'certificate') renderCertificate();
+    }
+
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('celebration-canvas');
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    });
+
+    window.onload = function() {
+      render();
+    };
+  </script>
+</body>
+</html>
